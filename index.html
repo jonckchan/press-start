@@ -591,11 +591,11 @@
         <div style="display: flex; gap: 8px;">
           <div style="flex: 1;">
             <label>Date of Birth</label>
-            <input type="date" id="c-dob" onchange="app.calcAge()">
+            <input type="date" id="c-dob" onchange="app.calcAgeFromDOB()">
           </div>
-          <div style="width: 80px;">
+          <div style="width: 100px;">
             <label>Age</label>
-            <input type="number" id="c-age" readonly style="background-color: #F1F5F9;">
+            <input type="number" id="c-age" placeholder="e.g. 32" min="0" max="120">
           </div>
         </div>
 
@@ -930,7 +930,7 @@
           card.innerHTML = `
             <div>
               <strong>${this.sanitize(c.name)}</strong>
-              <div class="muted">${this.sanitize(c.occupation || 'No occupation')} • ${this.sanitize(c.category)}</div>
+              <div class="muted">${this.sanitize(c.occupation || 'No occupation')} • ${this.sanitize(c.category)} ${c.age ? `(${c.age} yrs)` : ''}</div>
               ${c.action ? `<div style="font-size: 0.8rem; color: var(--teal); margin-top: 4px;">🎯 ${this.sanitize(c.action)}</div>` : ''}
             </div>
             <div style="font-size: 1.2rem; color: var(--text-muted);">➔</div>
@@ -951,7 +951,7 @@
             document.getElementById('c-name').value = c.name;
             document.getElementById('c-phone').value = c.phone || '';
             document.getElementById('c-dob').value = c.dob || '';
-            document.getElementById('c-age').value = c.age || '';
+            document.getElementById('c-age').value = c.age !== undefined ? c.age : '';
             document.getElementById('c-occupation').value = c.occupation || '';
             document.getElementById('c-category').value = c.category || 'Family';
             document.getElementById('c-familiarity').value = c.familiarity || 'Close';
@@ -972,13 +972,19 @@
         document.getElementById('contact-modal').classList.remove('open');
       }
 
-      calcAge() {
+      calcAgeFromDOB() {
         const dobVal = document.getElementById('c-dob').value;
         if (!dobVal) return;
         const dob = new Date(dobVal);
-        const diff = Date.now() - dob.getTime();
-        const ageDate = new Date(diff);
-        document.getElementById('c-age').value = Math.abs(ageDate.getUTCFullYear() - 1970);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+            age--;
+        }
+        if (!isNaN(age) && age >= 0) {
+          document.getElementById('c-age').value = age;
+        }
       }
 
       saveContact(e) {
@@ -992,7 +998,7 @@
           name: name,
           phone: document.getElementById('c-phone').value.trim(),
           dob: document.getElementById('c-dob').value,
-          age: document.getElementById('c-age').value,
+          age: document.getElementById('c-age').value ? parseInt(document.getElementById('c-age').value) : '',
           occupation: document.getElementById('c-occupation').value.trim(),
           category: document.getElementById('c-category').value,
           familiarity: document.getElementById('c-familiarity').value,
